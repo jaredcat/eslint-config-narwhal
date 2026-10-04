@@ -1,0 +1,90 @@
+name: Update peers
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+
+      - run: npm ci
+
+      - name: Snapshot conflict rules before bump
+        run: cp conflicts.json /tmp/conflicts.before.json
+
+      - name: Bump eslint (peer) and bundled plugins
+        run: |
+          npm install --save-dev eslint@latest
+          npm install eslint-plugin-unicorn@latest eslint-plugin-sonarjs@latest
+
+      - name: Sync narwhal offs and dependency ranges
+        run: npm run sync
+
+      - name: Format files rewritten by sync
+        run: npx prettier --write package.json README.md
+
+      - name: Lint, format check, and test
+        run: |
+          npm run lint
+          npm run format:check
+          npm test
+
+      - name: Gate on conflict-rule stability
+        id: gate
+        run: |
+          if cmp -s /tmp/conflicts.before.json conflicts.json; then
+            echo "safe=true" >> "$GITHUB_OUTPUT"
+            echo "Conflict rules unchanged — will merge without review."
+          else
+            echo "safe=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::conflicts.json changed; PR will require review (detect-conflicts output shifted)."
+            diff -u /tmp/conflicts.before.json conflicts.json || true
+          fi
+
+      - name: Bump package patch version when safe
+        if: steps.gate.outputs.safe == 'true'
+        run: npm version patch --no-git-tag-version
+
+      - name: Create pull request
+        id: cpr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: chore/update-peers
+          delete-branch: true
+          title: >-
+            ${{ steps.gate.outputs.safe == 'true'
+            && 'chore: update eslint dependencies'
+            || 'chore: update eslint dependencies (conflict rules changed — review)' }}
+          commit-message: >-
+            ${{ steps.gate.outputs.safe == 'true'
+            && 'chore: update eslint dependencies'
+            || 'chore: update eslint dependencies (conflict rules changed)' }}
+          body: |
+            Automated dependency bump for `eslint` (peer) and bundled `eslint-plugin-unicorn` / `eslint-plugin-sonarjs`.
+
+            - Sync via `npm run sync`
+            - Lint / format / test passed in this workflow
+            - Conflict-rule gate: **${{ steps.gate.outputs.safe == 'true' && 'unchanged (merging without review)' || 'CHANGED — please review conflicts.json / index.js offs' }}**
+
+      # Merge immediately when safe (tests already ran here). Do not wait on PR CI —
+      # GITHUB_TOKEN PRs often skip workflows. Conflict-rule changes stay open for review.
+      - name: Merge when safe
+        if: steps.gate.outputs.safe == 'true' && steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" \
+            --squash \
+            --delete-branch

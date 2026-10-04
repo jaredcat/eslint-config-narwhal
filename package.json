@@ -1,7 +1,7 @@
 {
   "name": "eslint-config-narwhal",
   "version": "1.0.0",
-  "description": "SonarJS + Unicorn.js — with resolved conflicts.",
+  "description": "SonarJS + Unicorn — with resolved conflicts",
   "type": "module",
   "exports": {
     ".": "./index.js"
@@ -10,7 +10,14 @@
     "index.js"
   ],
   "scripts": {
-    "test": "node test/smoke.test.js"
+    "test": "tsx --test test/smoke.test.ts",
+    "sync": "tsx scripts/sync-narwhal.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
   },
   "keywords": [
     "eslint",
@@ -28,13 +35,39 @@
   },
   "homepage": "https://github.com/jaredcat/eslint-config-narwhal#readme",
   "peerDependencies": {
+    "eslint": "^10.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
     "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true
+  },
+  "dependencies": {
     "eslint-plugin-sonarjs": "^4.2.2",
     "eslint-plugin-unicorn": "^77.0.0"
   },
-  "devDependencies": {
-    "eslint": "^10.12.0",
-    "eslint-plugin-sonarjs": "^4.2.2",
-    "eslint-plugin-unicorn": "^77.0.0"
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,cts,mts}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": "prettier --write"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "packageManager": "npm@12.2.0",
+  "publishConfig": {
+    "access": "public"
   }
 }

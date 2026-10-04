@@ -1,0 +1,6 @@
+{
+  "unicorn/prefer-global-number-constants": {
+    "why": "Sonar-aligned prefer-number-properties wants Number.NaN; Unicorn autofix rewrites to NaN",
+    "fixture": "export const x = Number.NaN;\n"
+  }
+}
