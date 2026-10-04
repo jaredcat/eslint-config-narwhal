@@ -37,6 +37,10 @@ jobs:
           node-version-file: package.json
           registry-url: https://registry.npmjs.org
 
+      - name: Install dependencies
+        if: steps.version.outputs.changed == 'true'
+        run: npm ci
+
       - name: Create GitHub release
         if: steps.version.outputs.changed == 'true'
         env:

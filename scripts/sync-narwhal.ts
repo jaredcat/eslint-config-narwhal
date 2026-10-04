@@ -143,7 +143,7 @@ function syncPackageJson(): void {
     'lint:fix': 'eslint . --fix',
     format: 'prettier --write .',
     'format:check': 'prettier --check .',
-    prepare: 'husky',
+    prepare: 'husky || true',
   };
 
   writeFileSync(packagePath, `${JSON.stringify(packageJson, undefined, 2)}\n`);
