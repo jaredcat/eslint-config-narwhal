@@ -1,6 +1,6 @@
 # eslint-config-narwhal
 
-Underwater unicorn — SonarJS wins when Unicorn conflicts.
+## Sonar + Unicorn = Narwhal
 
 One flat ESLint preset: Unicorn recommended + SonarJS recommended + Unicorn offs for autofix fights. Consumers only install this package (and `eslint`).
 

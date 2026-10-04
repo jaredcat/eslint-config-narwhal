@@ -1,13 +1,18 @@
 {
   "name": "eslint-config-narwhal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SonarJS + Unicorn — with resolved conflicts",
   "type": "module",
   "exports": {
-    ".": "./index.js"
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
   },
+  "types": "./index.d.ts",
   "files": [
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "scripts": {
     "test": "tsx --test test/smoke.test.ts",
