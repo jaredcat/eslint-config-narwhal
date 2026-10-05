@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - package.json
+  # Explicit dispatch — used by Update peers after GITHUB_TOKEN merges
+  # (those pushes do not trigger workflows on their own).
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -37,12 +40,23 @@ jobs:
           node-version-file: package.json
           registry-url: https://registry.npmjs.org
 
-      - name: Install dependencies
+      - name: Skip if version already on npm
+        id: npm
         if: steps.version.outputs.changed == 'true'
+        run: |
+          if npm view "eslint-config-narwhal@${{ steps.version.outputs.new }}" version >/dev/null 2>&1; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "eslint-config-narwhal@${{ steps.version.outputs.new }} already on npm — nothing to do."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        if: steps.npm.outputs.publish == 'true'
         run: npm ci
 
       - name: Create GitHub release
-        if: steps.version.outputs.changed == 'true'
+        if: steps.npm.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -57,7 +71,7 @@ jobs:
           fi
 
       - name: Publish to npm
-        if: steps.version.outputs.changed == 'true'
+        if: steps.npm.outputs.publish == 'true'
         env:
           HUSKY: '0'
           # Optional fallback if Trusted Publishing is not configured yet.

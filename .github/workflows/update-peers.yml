@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   update:
@@ -41,8 +42,21 @@ jobs:
           npm run format:check
           npm test
 
+      # Runs before `npm version patch`, so an empty tree means deps were already latest.
+      - name: Detect meaningful updates
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No dependency or generated-file updates — skipping PR."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --stat
+          fi
+
       - name: Gate on conflict-rule stability
         id: gate
+        if: steps.changes.outputs.changed == 'true'
         run: |
           if cmp -s /tmp/conflicts.before.json conflicts.json; then
             echo "safe=true" >> "$GITHUB_OUTPUT"
@@ -54,11 +68,12 @@ jobs:
           fi
 
       - name: Bump package patch version when safe
-        if: steps.gate.outputs.safe == 'true'
+        if: steps.changes.outputs.changed == 'true' && steps.gate.outputs.safe == 'true'
         run: npm version patch --no-git-tag-version
 
       - name: Create pull request
         id: cpr
+        if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/update-peers
@@ -79,12 +94,19 @@ jobs:
             - Conflict-rule gate: **${{ steps.gate.outputs.safe == 'true' && 'unchanged (merging without review)' || 'CHANGED — please review conflicts.json / index.js offs' }}**
 
       # Merge immediately when safe (tests already ran here). Do not wait on PR CI —
-      # GITHUB_TOKEN PRs often skip workflows. Conflict-rule changes stay open for review.
+      # GITHUB_TOKEN merges do not trigger push workflows, so dispatch Release explicitly.
+      # Conflict-rule changes stay open for review.
       - name: Merge when safe
-        if: steps.gate.outputs.safe == 'true' && steps.cpr.outputs.pull-request-number
+        if: steps.changes.outputs.changed == 'true' && steps.gate.outputs.safe == 'true' && steps.cpr.outputs.pull-request-number
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr merge "${{ steps.cpr.outputs.pull-request-number }}" \
             --squash \
             --delete-branch
+
+      - name: Release tag + npm publish
+        if: steps.changes.outputs.changed == 'true' && steps.gate.outputs.safe == 'true' && steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run release.yml --ref main
