@@ -14,5 +14,10 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["scripts/**/*.ts", "test/**/*.ts", "index.d.ts"]
+  "include": [
+    "scripts/**/*.ts",
+    "test/**/*.ts",
+    "index.ts",
+    "generated-offs.ts"
+  ]
 }

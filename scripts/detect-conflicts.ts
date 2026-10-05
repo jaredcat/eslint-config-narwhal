@@ -7,24 +7,24 @@ import { pathToFileURL } from 'node:url';
 
 const require = createRequire(import.meta.url);
 
-export type ConflictInfo = {
+export interface ConflictInfo {
   why: string;
   fixture: string;
-};
+}
 
 export type ConflictMap = Map<string, ConflictInfo>;
 
-type SeedFixture = {
+interface SeedFixture {
   alignedRule: string;
   options: Record<string, unknown>;
   code: string;
   why: string;
-};
+}
 
-type Snippet = {
+interface Snippet {
   code: string;
   options: Record<string, unknown> | undefined;
-};
+}
 
 /*
 Seed fixture: Sonar (S7773) prefers Number.NaN; Unicorn rewrites it.
@@ -80,7 +80,7 @@ export function parseSonarAlignedUnicornRules(): Set<string> {
       ?.split('end external rules', 1)[0] ?? '';
   const names = new Set<string>();
   for (const match of section.matchAll(/\[unicorn\/([a-z0-9-]+)\]/g)) {
-    names.add(match[1]!);
+    names.add(match[1]);
   }
   return names;
 }
@@ -115,12 +115,12 @@ function parseOptionsFromBlock(
   return undefined;
 }
 
-type SnippetParserState = {
+interface SnippetParserState {
   snippets: Snippet[];
   buffer: string[];
   isInCorrect: boolean;
   options: Record<string, unknown> | undefined;
-};
+}
 
 function commitBuffer(state: SnippetParserState): void {
   const code = state.buffer.join('\n').trim();
@@ -215,9 +215,6 @@ async function lintText(
       filePath: 'fixture.js',
     },
   );
-  if (!result) {
-    throw new Error('ESLint returned no result');
-  }
   return result;
 }
 
@@ -238,7 +235,7 @@ async function collectFights(
   options: Record<string, unknown> | undefined,
   sonarAligned: Set<string>,
   why: string,
-): Promise<Array<[string, ConflictInfo]>> {
+): Promise<[string, ConflictInfo][]> {
   const baseline = await lintText(code, [
     unicornRuleConfig(alignedRule, options),
   ]);
@@ -246,9 +243,7 @@ async function collectFights(
     (message) => message.ruleId === `unicorn/${alignedRule}`,
   ).length;
 
-  const recommended = await lintText(code, [
-    unicorn.configs.recommended as Linter.Config,
-  ]);
+  const recommended = await lintText(code, [unicorn.configs.recommended]);
   const suspects = [
     ...new Set(
       recommended.messages
@@ -270,10 +265,7 @@ async function collectFights(
           {
             plugins: { unicorn },
             rules: {
-              [ruleId]:
-                (unicorn.configs.recommended as Linter.Config).rules?.[
-                  ruleId
-                ] ?? 'error',
+              [ruleId]: unicorn.configs.recommended.rules?.[ruleId] ?? 'error',
             },
           },
         ],
@@ -301,7 +293,7 @@ async function collectFights(
 
 function mergeConflicts(
   conflicts: ConflictMap,
-  batches: Array<Array<[string, ConflictInfo]>>,
+  batches: [string, ConflictInfo][][],
 ): void {
   for (const batch of batches) {
     for (const [ruleId, info] of batch) {
@@ -338,7 +330,7 @@ export async function detectConflicts(): Promise<ConflictMap> {
   );
   const documentation = await Promise.all(
     alignedPresent.map(async (ruleName) => {
-      const url = unicornRules[ruleName]?.meta?.docs?.url;
+      const url = unicornRules[ruleName].meta?.docs?.url;
       if (!url) return { ruleName, markdown: undefined as string | undefined };
       try {
         const response = await fetch(toRawUrl(url));
@@ -378,7 +370,7 @@ export async function detectConflicts(): Promise<ConflictMap> {
 
 const isMain =
   Boolean(process.argv[1]) &&
-  import.meta.url === pathToFileURL(path.resolve(process.argv[1]!)).href;
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
 if (isMain) {
   const conflicts = await detectConflicts();
   console.log(JSON.stringify(Object.fromEntries(conflicts), undefined, 2));

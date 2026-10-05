@@ -25,10 +25,14 @@ jobs:
       - name: Snapshot conflict rules before bump
         run: cp conflicts.json /tmp/conflicts.before.json
 
-      - name: Bump eslint (peer) and bundled plugins
+      - name: Bump eslint (peer) and bundled dependencies
         run: |
           npm install --save-dev eslint@latest
-          npm install eslint-plugin-unicorn@latest eslint-plugin-sonarjs@latest
+          npm install \
+            eslint-plugin-unicorn@latest \
+            eslint-plugin-sonarjs@latest \
+            typescript-eslint@latest \
+            eslint-config-prettier@latest
 
       - name: Sync narwhal offs and dependency ranges
         run: npm run sync
@@ -87,11 +91,11 @@ jobs:
             && 'chore: update eslint dependencies'
             || 'chore: update eslint dependencies (conflict rules changed)' }}
           body: |
-            Automated dependency bump for `eslint` (peer) and bundled `eslint-plugin-unicorn` / `eslint-plugin-sonarjs`.
+            Automated dependency bump for `eslint` (peer) and bundled unicorn / sonarjs / typescript-eslint / eslint-config-prettier.
 
             - Sync via `npm run sync`
             - Lint / format / test passed in this workflow
-            - Conflict-rule gate: **${{ steps.gate.outputs.safe == 'true' && 'unchanged (merging without review)' || 'CHANGED — please review conflicts.json / index.js offs' }}**
+            - Conflict-rule gate: **${{ steps.gate.outputs.safe == 'true' && 'unchanged (merging without review)' || 'CHANGED — please review conflicts.json / generated-offs.ts' }}**
 
       # Merge immediately when safe (tests already ran here). Do not wait on PR CI —
       # GITHUB_TOKEN merges do not trigger push workflows, so dispatch Release explicitly.

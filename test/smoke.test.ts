@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import narwhal from '../index.js';
+import narwhal from '../index.ts';
 import type { ConflictInfo } from '../scripts/detect-conflicts.ts';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -24,56 +24,88 @@ async function lintFix(
     fix: true,
   });
   const [result] = await eslint.lintText(code, { filePath: 'fixture.js' });
-  return result?.output ?? code;
+  return result.output ?? code;
 }
 
-function offsConfig(): Linter.Config {
-  const config = narwhal.find(
-    (entry) =>
-      typeof entry === 'object' &&
-      entry !== null &&
-      'name' in entry &&
-      entry.name === 'narwhal/sonar-over-unicorn',
+function offsConfig(configs: Linter.Config[]): Linter.Config {
+  const config = configs.find(
+    (entry) => 'name' in entry && entry.name === 'narwhal/sonar-over-unicorn',
   );
   assert.ok(config, 'narwhal must include narwhal/sonar-over-unicorn offs');
-  return config as Linter.Config;
+  return config;
 }
 
-describe('narwhal preset', () => {
-  const entries = Object.entries(conflicts);
+function hasNamedConfig(configs: Linter.Config[], name: string): boolean {
+  return configs.some((entry) => 'name' in entry && entry.name === name);
+}
 
-  it('exports unicorn + sonarjs + offs', () => {
-    assert.ok(
-      Array.isArray(narwhal),
-      'default export must be a flat-config array',
-    );
+describe('narwhal()', () => {
+  const entries = Object.entries(conflicts);
+  const base = narwhal();
+
+  it('returns unicorn + sonarjs + offs', () => {
+    assert.ok(Array.isArray(base), 'narwhal() must return a flat-config array');
     assert.ok(entries.length > 0, 'conflicts.json must list at least one off');
-    assert.ok(offsConfig().rules, 'offs config must expose rules');
+    assert.ok(offsConfig(base).rules, 'offs config must expose rules');
     assert.ok(
-      narwhal.some(
-        (entry) =>
-          typeof entry === 'object' &&
-          entry !== null &&
-          'name' in entry &&
-          entry.name === 'narwhal/eslint-config-entrypoint',
-      ),
+      hasNamedConfig(base, 'narwhal/eslint-config-entrypoint'),
       'narwhal must include eslint.config.* entrypoint override',
     );
+  });
+
+  it('layers typescript-eslint and prettier from options', () => {
+    const withTs = narwhal({ typescript: true });
+    assert.ok(
+      withTs.length > base.length,
+      'typescript: true should add configs',
+    );
+
+    const withStrict = narwhal({ typescript: true, strict: true });
+    assert.ok(
+      withStrict.length > base.length,
+      'strict should add typescript-eslint configs',
+    );
+
+    const withTypechecked = narwhal({ typechecked: true });
+    assert.ok(
+      withTypechecked.length > base.length,
+      'typechecked implies typescript',
+    );
+
+    const withStylistic = narwhal({ stylistic: true });
+    assert.ok(
+      withStylistic.length > withTs.length,
+      'stylistic should add more configs than typescript alone',
+    );
+
+    const withPrettier = narwhal({ prettier: true });
+    assert.equal(
+      withPrettier.length,
+      base.length + 1,
+      'prettier appends one config',
+    );
+
+    const full = narwhal({
+      typescript: true,
+      typechecked: true,
+      strict: true,
+      stylistic: true,
+      prettier: true,
+    });
+    assert.ok(full.length > withTypechecked.length);
+    assert.ok(offsConfig(full).rules);
   });
 
   for (const [ruleId, { fixture, why }] of entries) {
     it(`preserves fixture when ${ruleId} is off`, async () => {
       assert.equal(
-        offsConfig().rules?.[ruleId],
+        offsConfig(base).rules?.[ruleId],
         'off',
-        `index.js must disable ${ruleId}`,
+        `generated offs must disable ${ruleId}`,
       );
 
       const withoutOffs = await lintFix(
-        [
-          unicorn.configs.recommended as Linter.Config,
-          sonarjs.configs.recommended as Linter.Config,
-        ],
+        [unicorn.configs.recommended, sonarjs.configs.recommended],
         fixture,
       );
       assert.notEqual(
@@ -82,11 +114,11 @@ describe('narwhal preset', () => {
         `expected ${ruleId} to rewrite fixture without offs (${why})`,
       );
 
-      const withNarwhal = await lintFix(narwhal as Linter.Config[], fixture);
+      const withNarwhal = await lintFix(base, fixture);
       assert.equal(
         withNarwhal,
         fixture,
-        `with narwhal, fixture for ${ruleId} must be preserved`,
+        `with narwhal(), fixture for ${ruleId} must be preserved`,
       );
     });
   }

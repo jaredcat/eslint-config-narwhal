@@ -2,7 +2,7 @@
 
 ## Sonar + Unicorn = Narwhal
 
-One flat ESLint preset: Unicorn recommended + SonarJS recommended + Unicorn offs for autofix fights. Consumers only install this package (and `eslint`).
+Callable flat ESLint preset: Unicorn recommended + SonarJS recommended + Unicorn offs for autofix fights, with optional TypeScript and Prettier layers. Consumers only install this package (and `eslint`).
 
 ## Install
 
@@ -10,7 +10,7 @@ One flat ESLint preset: Unicorn recommended + SonarJS recommended + Unicorn offs
 npm install -D eslint eslint-config-narwhal
 ```
 
-`eslint-plugin-unicorn` and `eslint-plugin-sonarjs` are bundled as dependencies.
+`eslint-plugin-unicorn`, `eslint-plugin-sonarjs`, `typescript-eslint`, and `eslint-config-prettier` are bundled as dependencies.
 
 ## Usage
 
@@ -18,10 +18,43 @@ npm install -D eslint eslint-config-narwhal
 import narwhal from 'eslint-config-narwhal';
 
 export default [
-  ...narwhal,
-  // app-specific overrides after this
+  ...narwhal(), // unicorn + sonarjs + conflict offs
 ];
 ```
+
+### Options
+
+| Option        | Default | Effect                                                                                |
+| ------------- | ------- | ------------------------------------------------------------------------------------- |
+| `typescript`  | `false` | Include typescript-eslint. Implied if `typechecked`, `strict`, or `stylistic` is set. |
+| `typechecked` | `false` | Use `*TypeChecked` typescript-eslint configs.                                         |
+| `strict`      | `false` | Use `strict*` instead of `recommended*`.                                              |
+| `stylistic`   | `false` | Also include `stylistic` / `stylisticTypeChecked`.                                    |
+| `prettier`    | `false` | Append `eslint-config-prettier` last.                                                 |
+
+```js
+import narwhal from 'eslint-config-narwhal';
+
+export default [
+  ...narwhal({
+    typescript: true,
+    typechecked: true,
+    strict: true,
+    stylistic: true,
+    prettier: true,
+  }),
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+];
+```
+
+`typechecked: true` does not bake in `projectService` — set that (or `project`) in your config so typed rules can resolve your tsconfig.
 
 ## What it disables
 
@@ -43,7 +76,7 @@ This repo dogfoods the same entry via [`eslint.config.js`](eslint.config.js) (`n
 
 ## Automation
 
-- Daily workflow bumps `eslint` / unicorn / sonarjs, runs `npm run sync`, then lint/test.
+- Daily workflow bumps `eslint` / unicorn / sonarjs / typescript-eslint / eslint-config-prettier, runs `npm run sync`, then lint/test.
 - If `conflicts.json` is **unchanged**, it patch-bumps the package version and merges without review.
 - If conflict offs **change**, it opens a PR and leaves it for review.
 - Pushing a new `package.json` version to `main` creates a GitHub release tag (`v*`) and publishes to npm.
