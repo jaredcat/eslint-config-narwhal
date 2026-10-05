@@ -2,7 +2,7 @@
 
 ## Sonar + Unicorn = Narwhal
 
-Callable flat ESLint preset: Unicorn recommended + SonarJS recommended + Unicorn offs for autofix fights, with optional TypeScript and Prettier layers. Consumers only install this package (and `eslint`).
+Callable flat ESLint preset: `@eslint/js` recommended + Unicorn recommended + SonarJS recommended + Unicorn offs for autofix fights, with optional TypeScript and Prettier layers. Consumers only install this package (and `eslint`).
 
 ## Install
 
@@ -10,7 +10,7 @@ Callable flat ESLint preset: Unicorn recommended + SonarJS recommended + Unicorn
 npm install -D eslint eslint-config-narwhal
 ```
 
-`eslint-plugin-unicorn`, `eslint-plugin-sonarjs`, `typescript-eslint`, and `eslint-config-prettier` are bundled as dependencies.
+`@eslint/js`, `eslint-plugin-unicorn`, `eslint-plugin-sonarjs`, `typescript-eslint`, and `eslint-config-prettier` are bundled as dependencies.
 
 ## Usage
 
@@ -18,7 +18,7 @@ npm install -D eslint eslint-config-narwhal
 import narwhal from 'eslint-config-narwhal';
 
 export default [
-  ...narwhal(), // unicorn + sonarjs + conflict offs
+  ...narwhal(), // @eslint/js + unicorn + sonarjs + conflict offs
 ];
 ```
 
@@ -26,6 +26,7 @@ export default [
 
 | Option        | Default | Effect                                                                                |
 | ------------- | ------- | ------------------------------------------------------------------------------------- |
+| `eslint`      | `true`  | Include `@eslint/js` recommended.                                                     |
 | `typescript`  | `false` | Include typescript-eslint. Implied if `typechecked`, `strict`, or `stylistic` is set. |
 | `typechecked` | `false` | Use `*TypeChecked` typescript-eslint configs.                                         |
 | `strict`      | `false` | Use `strict*` instead of `recommended*`.                                              |
@@ -80,7 +81,7 @@ This repo dogfoods the same entry via [`eslint.config.js`](eslint.config.js) (`n
 
 ## Automation
 
-- Daily workflow bumps `eslint` / unicorn / sonarjs / typescript-eslint / eslint-config-prettier, runs `npm run sync`, then lint/test.
+- Daily workflow bumps `eslint` / `@eslint/js` / unicorn / sonarjs / typescript-eslint / eslint-config-prettier, runs `npm run sync`, then lint/test.
 - If `conflicts.json` is **unchanged**, it patch-bumps the package version and merges without review.
 - If conflict offs **change**, it opens a PR and leaves it for review.
 - Pushing a new `package.json` version to `main` creates a GitHub release tag (`v*`) and publishes to npm.

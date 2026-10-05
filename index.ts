@@ -1,4 +1,5 @@
 import type { Linter } from 'eslint';
+import eslintJs from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
@@ -6,6 +7,10 @@ import tseslint from 'typescript-eslint';
 import { conflictOffs } from './generated-offs.ts';
 
 export interface NarwhalOptions {
+  /**
+  Include @eslint/js recommended. Default true.
+  */
+  eslint?: boolean;
   /**
   Include typescript-eslint. Default false. Implied true if typechecked, strict, or stylistic.
   */
@@ -59,6 +64,7 @@ function typescriptEslintConfigKey(
 }
 
 export default function narwhal(options: NarwhalOptions = {}): Linter.Config[] {
+  const shouldIncludeEslint = options.eslint ?? true;
   const isTypechecked = Boolean(options.typechecked);
   const isStrict = Boolean(options.strict);
   const isStylistic = Boolean(options.stylistic);
@@ -66,7 +72,13 @@ export default function narwhal(options: NarwhalOptions = {}): Linter.Config[] {
   const isTypescript =
     options.typescript ?? (isTypechecked || isStrict || isStylistic);
 
-  const config: Linter.Config[] = [...base];
+  const config: Linter.Config[] = [];
+
+  if (shouldIncludeEslint) {
+    config.push(eslintJs.configs.recommended);
+  }
+
+  config.push(...base);
 
   if (isTypescript) {
     const key = typescriptEslintConfigKey(isTypechecked, isStrict);

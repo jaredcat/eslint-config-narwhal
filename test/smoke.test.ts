@@ -43,13 +43,21 @@ describe('narwhal()', () => {
   const entries = Object.entries(conflicts);
   const base = narwhal();
 
-  it('returns unicorn + sonarjs + offs', () => {
+  it('returns eslint + unicorn + sonarjs + offs', () => {
     assert.ok(Array.isArray(base), 'narwhal() must return a flat-config array');
     assert.ok(entries.length > 0, 'conflicts.json must list at least one off');
     assert.ok(offsConfig(base).rules, 'offs config must expose rules');
     assert.ok(
+      hasNamedConfig(base, '@eslint/js/recommended'),
+      'narwhal() should include @eslint/js recommended by default',
+    );
+    assert.ok(
       hasNamedConfig(base, 'narwhal/eslint-config-entrypoint'),
       'narwhal must include eslint.config.* entrypoint override',
+    );
+    assert.ok(
+      !hasNamedConfig(narwhal({ eslint: false }), '@eslint/js/recommended'),
+      'eslint: false should omit @eslint/js recommended',
     );
   });
 
