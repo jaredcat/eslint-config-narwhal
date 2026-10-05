@@ -78,6 +78,15 @@ export default function narwhal(options: NarwhalOptions = {}): Linter.Config[] {
         : tseslint.configs.stylistic;
       config.push(...stylisticConfigs);
     }
+
+    if (isTypechecked) {
+      // Config files rarely belong to a TS project; typed rules there are noise/footguns.
+      config.push({
+        ...tseslint.configs.disableTypeChecked,
+        name: 'narwhal/disable-type-checked-eslint-config',
+        files: ['**/eslint.config.{js,cjs,mjs,ts,cts,mts}'],
+      });
+    }
   }
 
   if (isPrettier) {

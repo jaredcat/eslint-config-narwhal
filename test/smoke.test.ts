@@ -71,6 +71,17 @@ describe('narwhal()', () => {
       withTypechecked.length > base.length,
       'typechecked implies typescript',
     );
+    assert.ok(
+      hasNamedConfig(
+        withTypechecked,
+        'narwhal/disable-type-checked-eslint-config',
+      ),
+      'typechecked should disable typed rules for eslint.config.*',
+    );
+    assert.ok(
+      !hasNamedConfig(withTs, 'narwhal/disable-type-checked-eslint-config'),
+      'non-typechecked typescript should not add disableTypeChecked',
+    );
 
     const withStylistic = narwhal({ stylistic: true });
     assert.ok(

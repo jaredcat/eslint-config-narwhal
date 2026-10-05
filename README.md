@@ -46,7 +46,11 @@ export default [
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        // Shape is yours — narwhal does not bake this in.
+        projectService: {
+          allowDefaultProject: ['*.js', 'eslint.config.js'],
+        },
+        // Must be set in the consumer (path differs per repo).
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -54,7 +58,7 @@ export default [
 ];
 ```
 
-`typechecked: true` does not bake in `projectService` — set that (or `project`) in your config so typed rules can resolve your tsconfig.
+`typechecked: true` does **not** bake in `projectService` or `tsconfigRootDir` — those stay in your config. It does turn off type-checked typescript-eslint rules for `eslint.config.*` files (same glob as the unicorn entrypoint override).
 
 ## What it disables
 
@@ -68,7 +72,7 @@ export default [
 
 Duplicate Unicorn rules that Sonar reimplements are left alone — this package only turns off opposing autofix intent.
 
-It also turns off `unicorn/no-top-level-side-effects` for `eslint.config.*` files, which must evaluate a top-level export.
+It also turns off `unicorn/no-top-level-side-effects` for `eslint.config.*` files, which must evaluate a top-level export. With `typechecked: true`, those files also get `typescript-eslint`’s `disableTypeChecked` so typed rules don’t require them to be in a TS project.
 
 Regenerate offs after bumping peers: `npm run sync`.
 
