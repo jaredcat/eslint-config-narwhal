@@ -18,7 +18,7 @@ const BUNDLED_DEPS = [
 
 function renderGeneratedOffs(conflicts: ConflictMap): string {
   const ruleLines = Iterator.from(conflicts)
-    .map(([ruleId, { why }]) => `\t// ${why}\n\t'${ruleId}': 'off',`)
+    .map(([ruleId, { why }]) => `  // ${why}\n  '${ruleId}': 'off',`)
     .toArray();
 
   return `/**

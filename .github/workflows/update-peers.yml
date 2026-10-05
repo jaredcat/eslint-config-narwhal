@@ -39,7 +39,7 @@ jobs:
         run: npm run sync
 
       - name: Format files rewritten by sync
-        run: npx prettier --write package.json README.md
+        run: npx prettier --write package.json README.md generated-offs.ts
 
       - name: Lint, format check, and test
         run: |
