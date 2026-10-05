@@ -29,6 +29,7 @@ jobs:
         run: |
           npm install --save-dev eslint@latest
           npm install \
+            @eslint/js@latest \
             eslint-plugin-unicorn@latest \
             eslint-plugin-sonarjs@latest \
             typescript-eslint@latest \
@@ -91,7 +92,7 @@ jobs:
             && 'chore: update eslint dependencies'
             || 'chore: update eslint dependencies (conflict rules changed)' }}
           body: |
-            Automated dependency bump for `eslint` (peer) and bundled unicorn / sonarjs / typescript-eslint / eslint-config-prettier.
+            Automated dependency bump for `eslint` (peer) and bundled `@eslint/js` / unicorn / sonarjs / typescript-eslint / eslint-config-prettier.
 
             - Sync via `npm run sync`
             - Lint / format / test passed in this workflow

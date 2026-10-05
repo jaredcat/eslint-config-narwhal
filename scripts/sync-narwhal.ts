@@ -9,6 +9,7 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const ESLINT_PEER = 'eslint';
 const BUNDLED_DEPS = [
+  '@eslint/js',
   'eslint-plugin-unicorn',
   'eslint-plugin-sonarjs',
   'typescript-eslint',
