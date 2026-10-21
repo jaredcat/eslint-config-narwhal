@@ -10,7 +10,7 @@ Callable flat ESLint preset: `@eslint/js` recommended + Unicorn recommended + So
 npm install -D eslint eslint-config-narwhal
 ```
 
-`@eslint/js`, `eslint-plugin-unicorn`, `eslint-plugin-sonarjs`, `typescript-eslint`, and `eslint-config-prettier` are bundled as dependencies.
+`@eslint/js`, `eslint-plugin-unicorn`, `eslint-plugin-sonarjs`, and `eslint-config-prettier` are bundled as dependencies. `eslint` and `typescript-eslint` are peer dependencies — install them in your project so a single copy is shared.
 
 ## Usage
 
@@ -83,7 +83,7 @@ This repo dogfoods the same entry via [`eslint.config.js`](eslint.config.js) (`n
 
 ## Automation
 
-- Daily workflow bumps `eslint` / `@eslint/js` / unicorn / sonarjs / typescript-eslint / eslint-config-prettier, runs `npm run sync`, then lint/test.
+- Daily workflow bumps the peers `eslint` / `typescript-eslint` and bundled `@eslint/js` / unicorn / sonarjs / eslint-config-prettier, runs `npm run sync`, then lint/test.
 - If `conflicts.json` is **unchanged**, it patch-bumps the package version and merges without review.
 - If conflict offs **change**, it opens a PR and leaves it for review.
 - Pushing a new `package.json` version to `main` creates a GitHub release tag (`v*`) and publishes to npm.

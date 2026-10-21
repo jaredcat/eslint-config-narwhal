@@ -7,12 +7,12 @@ import { detectConflicts, type ConflictMap } from './detect-conflicts.ts';
 const require = createRequire(import.meta.url);
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const ESLINT_PEER = 'eslint';
+// Peers (also kept in devDependencies) so consumers share a single copy.
+const PEER_DEPS = ['eslint', 'typescript-eslint'] as const;
 const BUNDLED_DEPS = [
   '@eslint/js',
   'eslint-plugin-unicorn',
   'eslint-plugin-sonarjs',
-  'typescript-eslint',
   'eslint-config-prettier',
 ] as const;
 
@@ -107,16 +107,18 @@ function syncPackageJson(): void {
   packageJson.dependencies ??= {};
   packageJson.devDependencies ??= {};
 
-  const eslintRange = `^${installedVersion(ESLINT_PEER)}`;
-  packageJson.peerDependencies = { [ESLINT_PEER]: eslintRange };
-  packageJson.devDependencies[ESLINT_PEER] = eslintRange;
-
-  // Bundled so consumers only install this package (+ eslint).
-  const nextPeers = { ...packageJson.peerDependencies };
+  const nextPeers: Record<string, string> = {};
   const nextDevelopment = { ...packageJson.devDependencies };
+  for (const name of PEER_DEPS) {
+    const range = `^${installedVersion(name)}`;
+    nextPeers[name] = range;
+    nextDevelopment[name] = range;
+    Reflect.deleteProperty(packageJson.dependencies, name);
+  }
+
+  // Bundled so consumers only install this package (+ the peers).
   for (const name of BUNDLED_DEPS) {
     packageJson.dependencies[name] = `^${installedVersion(name)}`;
-    Reflect.deleteProperty(nextPeers, name);
     Reflect.deleteProperty(nextDevelopment, name);
   }
   packageJson.peerDependencies = nextPeers;
