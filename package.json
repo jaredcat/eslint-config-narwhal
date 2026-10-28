@@ -1,6 +1,6 @@
 {
   "name": "eslint-config-narwhal",
-  "version": "2.1.8",
+  "version": "2.1.9",
   "description": "SonarJS + Unicorn — with resolved conflicts",
   "type": "module",
   "exports": {
