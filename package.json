@@ -1,6 +1,6 @@
 {
   "name": "eslint-config-narwhal",
-  "version": "2.1.9",
+  "version": "2.1.10",
   "description": "SonarJS + Unicorn — with resolved conflicts",
   "type": "module",
   "exports": {
@@ -41,12 +41,12 @@
   },
   "homepage": "https://github.com/jaredcat/eslint-config-narwhal#readme",
   "peerDependencies": {
-    "eslint": "^10.13.0",
+    "eslint": "^10.14.0",
     "typescript-eslint": "^8.72.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
-    "eslint": "^10.13.0",
+    "eslint": "^10.14.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",
