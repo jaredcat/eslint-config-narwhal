@@ -1,13 +1,14 @@
+---
 name: Release
 
-on:
+'on':
   push:
     branches: [main]
     paths:
       - package.json
   # Explicit dispatch — used by Update peers after GITHUB_TOKEN merges
   # (those pushes do not trigger workflows on their own).
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: write
