@@ -124,11 +124,13 @@ function syncPackageJson(): void {
   packageJson.peerDependencies = nextPeers;
   packageJson.devDependencies = nextDevelopment;
 
+  // Node's loader, not tsx. tsx evaluates eslint-plugin-unicorn twice, so its
+  // wrapped create functions are wrapped again and recommended rules throw.
   packageJson.scripts = {
     ...packageJson.scripts,
     build: 'tsc -p tsconfig.build.json',
-    sync: 'tsx scripts/sync-narwhal.ts',
-    test: 'tsx --test test/smoke.test.ts',
+    sync: 'node scripts/sync-narwhal.ts',
+    test: 'node --test test/smoke.test.ts',
     typecheck: 'tsc -p tsconfig.json',
     lint: 'eslint .',
     'lint:fix': 'eslint . --fix',
